@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breast Cancer Prediction</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="container">
+    <h1>🩺 Breast Cancer Prediction</h1>
+
+    <form id="predictionForm">
+      <div id="inputFields"></div>
+      <button type="submit">Predict</button>
+    </form>
+
+    <div id="output" class="result"></div>
+  </div>
+
+  <script>
+  // Define the feature names you want inputs for
+  const featureNames = [
+    "mean radius",
+    "mean texture",
+    "mean perimeter",
+    "mean area",
+    "mean smoothness"
+  ];
+
+  // Generate input fields dynamically
+  const inputContainer = document.getElementById("inputFields");
+  featureNames.forEach(name => {
+      const label = document.createElement("label");
+      label.textContent = name;
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = "any";
+      input.id = name;
+      input.placeholder = `Enter ${name}`;
+      input.required = true;
+
+      const div = document.createElement("div");
+      div.classList.add("input-group");
+      div.appendChild(label);
+      div.appendChild(input);
+
+      inputContainer.appendChild(div);
+  });
+
+  // Handle form submission
+  document.getElementById("predictionForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const inputData = {};
+
+      featureNames.forEach(name => {
+          const value = document.getElementById(name).value;
+          inputData[name] = value ? parseFloat(value) : 0;
+      });
+
+      const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(inputData)
+      });
+
+      const result = await response.json();
+      console.log(result);
+
+      if (result.result) {
+          document.getElementById("output").innerHTML =
+              `<b>Prediction:</b> ${result.result} <br>
+               Malignant: ${result.malignant}, Benign: ${result.benign}`;
+      } else {
+          document.getElementById("output").innerHTML =
+              `Error: ${result.error || "Unexpected response"}`;
+      }
+  });
+  </script>
+</body>
+</html>
